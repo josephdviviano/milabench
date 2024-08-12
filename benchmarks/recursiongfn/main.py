@@ -44,7 +44,15 @@ class SEHFragTrainerMonkeyPatch(SEHFragTrainer):
 
     def _maybe_resolve_shared_buffer(self, *args, **kwargs):
         batch = super()._maybe_resolve_shared_buffer(*args, **kwargs)
-        self.batch_size.append(batch.batch_size)
+
+        acc = 0
+        n = len(batch)
+        for i in range(n):
+            elem = batch[i]
+            acc += elem.x.shape[0]
+
+        self.batch_size.append(acc)
+        # self.batch_size.append(batch.batch_size)
         return batch
 
     def step(self, loss: Tensor):
@@ -104,7 +112,7 @@ def main():
     config.overwrite_existing_exp = True
 
     config.num_training_steps = 100  # 1000 # Change this to train for longer
-    config.checkpoint_every = 5  # 500
+    config.checkpoint_every = 5000  # 500
     config.validate_every = 0
     config.num_final_gen_steps = 0
     config.opt.lr_decay = 20_000
@@ -118,7 +126,7 @@ def main():
     config.num_workers = 8
     config.model.num_emb = 128
     config.model.num_layers = 4
-    batch_size = 64
+    batch_size = 128
 
     if config.replay.use:
         config.algo.num_from_policy = 0
